@@ -2,27 +2,63 @@
 
 t_log* logger;
 
+
 int iniciar_servidor(void)
 {
 	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	assert(!"no implementado!");
-
+	// assert(!"no implementado!");
+	
 	int socket_servidor;
 
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo;
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
+	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(NULL, PUERTO, &hints, &servinfo);
+	/*getaddrinfo() es una llamada al sistema que devuelve 
+	información de red sobre la IP y puerto que le pasemos, 
+	en este caso del servidor.*/
 
+	/* nos guarda en la variable server_info un
+	 puntero que apunta hacia los datos necesarios 
+	 para la creación del socket. */
+
+  int errorgetservec= getaddrinfo(NULL, "4444", &hints, &servinfo);
+		if(errorgetservec != 0){
+			printf("Error en la getaddrinfo del server : %s", gai_strerror(errorgetservec));
+			exit(-1);
+		}
 	// Creamos el socket de escucha del servidor
+
+	 socket_servidor = socket(servinfo->ai_family,
+                        servinfo->ai_socktype,
+                        servinfo->ai_protocol);
 
 	// Asociamos el socket a un puerto
 
+/*lo que hace es tomar el socket que creamos con anterioridad 
+y pegarlo con pegamento industrial al puerto que le digamos.*/
+
+	int errorbind = bind(socket_servidor,servinfo->ai_addr, servinfo->ai_addrlen);
+		 if(errorbind == -1){
+			printf("error en la bind del server %s", gai_strerror(errorbind));
+			exit(-1);
+		 }
+
+
 	// Escuchamos las conexiones entrantes
+	/*listen() toma ese mismo socket y lo marca en el sistema como un socket cuya única 
+	responsabilidad es notificar cuando un nuevo cliente esté intentando conectarse.*/
+
+	int errorlisten=listen(socket_servidor, SOMAXCONN);
+	if(errorbind== -1){
+			printf("error en el lsiten del server %s", gai_strerror(errorlisten));
+			exit(-7);
+		 }
+
+
 
 	freeaddrinfo(servinfo);
 	log_trace(logger, "Listo para escuchar a mi cliente");
@@ -33,11 +69,12 @@ int iniciar_servidor(void)
 int esperar_cliente(int socket_servidor)
 {
 	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	assert(!"no implementado!");
+	// assert(!"no implementado!");
 
 	// Aceptamos un nuevo cliente
-	int socket_cliente;
+	int socket_cliente= accept(socket_servidor, NULL, NULL);
 	log_info(logger, "Se conecto un cliente!");
+
 
 	return socket_cliente;
 }
